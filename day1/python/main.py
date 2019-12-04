@@ -20,8 +20,8 @@ def main(argv):
     with open(argv[1], "r") as f:
         masses = [int(line) for line in f]
 
-    print(sum([calc_fuel(mass) for mass in masses]))
-    print(sum([total_fuel(mass) for mass in masses]))
+    print(sum(calc_fuel(mass) for mass in masses))
+    print(sum(total_fuel(mass) for mass in masses))
 
 
 if __name__ == "__main__":

@@ -33,11 +33,13 @@ def main(argv):
         wires = [Wire(line.split(",")) for line in f]
 
     intersections = set.intersection(*[w.points() for w in wires])
-    distances = [abs(x) + abs(y) for (x, y) in intersections]
-    print(min(distances))
+    min_distance = min(abs(x) + abs(y) for (x, y) in intersections)
+    print(min_distance)
 
-    signal_delay = [sum([w.num_steps(pos) for w in wires]) for pos in intersections]
-    print(min(signal_delay))
+    min_signal_delay = min(
+        sum(w.num_steps(pos) for w in wires) for pos in intersections
+    )
+    print(min_signal_delay)
 
 
 if __name__ == "__main__":
