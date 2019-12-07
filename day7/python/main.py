@@ -1,25 +1,36 @@
 #!/usr/bin/env python3
 import operator
 import sys
+import time
+
+from itertools import permutations
+from queue import Queue
+from threading import Thread
 
 
 class Intcode:
-    def __init__(self, mem, inputs):
+    def __init__(self, mem, inq, outq):
         self.mem = mem
         self.pc = 0
-        self.inputs = inputs
-        self.outputs = []
+        self.inq = inq
+        self.outq = outq
+        self.halted = False
+        self.last_output = 0
 
-    def run(self):
-        while True:
+    def _run(self):
+        while not self.halted:
             opcode = self.mem[self.pc]
             ins = Instruction(opcode)
             off = ins.run(self)
             if off is None:
-                break
-            self.pc += off
+                self.halted = True
+            else:
+                self.pc += off
 
-        return self.outputs
+    def run(self):
+        t = Thread(target=self._run, args=())
+        t.start()
+        return t
 
 
 class Instruction:
@@ -71,12 +82,13 @@ class Instruction:
         return self._jmp(m, lambda a: not a)
 
     def read(self, m):
-        self.store(m, 0, m.inputs.pop())
+        self.store(m, 0, m.inq.get())
         return 2
 
     def write(self, m):
         a = self.load(m, 0)
-        m.outputs.append(a)
+        m.outq.put(a)
+        m.last_output = a
         return 2
 
     def halt(self, m):
@@ -97,12 +109,51 @@ class Instruction:
         return operations[self.opcode](m)
 
 
+def run_amplifiers_serial(mem, p):
+    qs = [Queue() for _ in range(6)]
+    ms = [Intcode(mem.copy(), qs[i], qs[i + 1]) for i in range(5)]
+    ts = [m.run() for m in ms]
+
+    for s, q in zip(p, qs[:-1]):
+        q.put(s)
+
+    qs[0].put(0)
+
+    for t in ts:
+        t.join()
+
+    return qs[-1].get()
+
+
+def run_amplifiers_feedback(mem, p):
+    qs = [Queue() for _ in range(5)]
+    ms = [Intcode(mem.copy(), qs[i], qs[(i + 1) % 5]) for i in range(5)]
+    ts = [m.run() for m in ms]
+
+    for s, q in zip(p, qs):
+        q.put(s)
+
+    qs[0].put(0)
+
+    for t in ts:
+        t.join()
+
+    return ms[-1].last_output
+
+
 def main(argv):
     with open(argv[1], "r") as f:
         mem = [int(n) for n in f.read().split(",")]
 
-    print(Intcode(mem.copy(), [1]).run()[-1])
-    print(Intcode(mem.copy(), [5]).run()[-1])
+    max_output_part_1 = max(
+        run_amplifiers_serial(mem, p) for p in permutations(range(5))
+    )
+    print(max_output_part_1)
+
+    max_output_part_2 = max(
+        run_amplifiers_feedback(mem, p) for p in permutations(range(5, 10))
+    )
+    print(max_output_part_2)
 
 
 if __name__ == "__main__":

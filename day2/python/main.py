@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import operator
+import sys
 
 TARGET = 19690720
 
