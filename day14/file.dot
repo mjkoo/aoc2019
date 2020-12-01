@@ -1,0 +1,19 @@
+strict digraph  {
+A [amount=10];
+ORE;
+B [amount=1];
+C [amount=1];
+D [amount=1];
+E [amount=1];
+FUEL [amount=1];
+A -> ORE  [amount=10];
+B -> ORE  [amount=1];
+C -> A  [amount=7];
+C -> B  [amount=1];
+D -> A  [amount=7];
+D -> C  [amount=1];
+E -> A  [amount=7];
+E -> D  [amount=1];
+FUEL -> A  [amount=7];
+FUEL -> E  [amount=1];
+}

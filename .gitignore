@@ -1,2 +1,3 @@
 # Local OPAM switch
 _opam/
+__pycache__/
